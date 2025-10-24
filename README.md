@@ -229,6 +229,7 @@ python main.py
 - **Coqui** за открытое TTS-решение
 - **LM Studio** за удобный интерфейс для локальных LLM
 - **VTube Studio** за поддержку API
+- **Vedal** за Neuro-sama и вдохновение
 
 ---
 
