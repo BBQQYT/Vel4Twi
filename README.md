@@ -16,6 +16,9 @@
   
 </div>
 
+<p align="center">
+  <img src="https://github.com/BBQQYT/Vel4Twi/blob/main/banner.jpg?raw=true" alt="Vel4Twi Banner" width="830" height="500" />
+</p>
 ---
 
 ## 🎯 О проекте
