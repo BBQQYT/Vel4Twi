@@ -1,0 +1,14 @@
+discord.py>=2.0.0
+twitchio
+openai-whisper
+TTS
+sounddevice
+numpy
+scipy
+websockets
+aiohttp
+mss
+pytesseract
+Pillow
+librosa
+webrtcvad
