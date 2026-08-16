@@ -1,15 +1,14 @@
 @echo off
 setlocal enabledelayedexpansion
-chcp 65001 >nul
 title Vel4Twi - AI Streamer (Velpur)
 
 echo =======================================================
-echo          ✦ Vel4Twi - AI Streamer Velpur ✦
+echo          Vel4Twi - AI Streamer Velpur
 echo =======================================================
 echo.
 
-:: 1. Проверка наличия Python
-echo [*] Проверка наличия Python...
+REM 1. Check Python
+echo [*] Checking Python installation...
 set "PYTHON_CMD="
 for %%P in (python3 python py) do (
     if not defined PYTHON_CMD (
@@ -21,76 +20,75 @@ for %%P in (python3 python py) do (
 )
 
 if not defined PYTHON_CMD (
-    echo [ERROR] Python не найден в системе!
-    echo Пожалуйста, установите Python 3.9+ с сайта https://www.python.org/
-    echo Обязательно отметьте галочку "Add Python to PATH" при установке.
+    echo [ERROR] Python was not found in your PATH!
+    echo Please install Python 3.9+ from https://www.python.org/
+    echo Make sure to check "Add Python to PATH" during installation.
     echo.
     pause
     exit /b 1
 )
 
-echo [+] Python обнаружен:
+echo [+] Python detected:
 %PYTHON_CMD% --version
 echo.
 
-:: 2. Проверка FFmpeg
+REM 2. Check FFmpeg
 where ffmpeg >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [WARN] FFmpeg не найден в переменной PATH.
-    echo Обработка аудио и микрофона может работать с ошибками.
-    echo Рекомендуется установить FFmpeg и добавить его в PATH.
+    echo [WARN] FFmpeg was not found in PATH.
+    echo Audio processing and mic might not work properly.
     echo.
 )
 
-:: 3. Создание и активация виртуального окружения
+REM 3. Virtual Environment
 set "VENV_DIR=venv"
 if not exist "%VENV_DIR%\Scripts\activate.bat" (
-    echo [*] Создание виртуального окружения (.%VENV_DIR%)...
+    echo [*] Creating virtual environment (.%VENV_DIR%)...
     %PYTHON_CMD% -m venv %VENV_DIR%
     if %errorlevel% neq 0 (
-        echo [ERROR] Не удалось создать виртуальное окружение.
+        echo [ERROR] Failed to create virtual environment.
         pause
         exit /b 1
     )
-    echo [+] Виртуальное окружение успешно создано.
+    echo [+] Virtual environment created successfully.
     echo.
 )
 
 call "%VENV_DIR%\Scripts\activate.bat"
 
-:: 4. Установка зависимостей
-echo [*] Проверка pip и зависимостей...
+REM 4. Dependencies
+echo [*] Checking pip and dependencies...
 python -m pip install --upgrade pip >nul 2>&1
 
 if exist "requirements.txt" (
     python -c "import torch" >nul 2>&1
     if %errorlevel% neq 0 (
-        echo [*] Установка PyTorch с поддержкой CUDA...
+        echo [*] Installing PyTorch with CUDA support...
         pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
     )
-    echo [*] Проверка и установка пакетов из requirements.txt...
+    echo [*] Installing requirements...
     pip install -r requirements.txt
-    echo [+] Все зависимости готовы.
+    echo [+] Dependencies ready.
     echo.
 )
 
-:: 5. Проверка файлов конфигурации
+REM 5. Config files
 if not exist ".env" (
     if exist ".env.example" (
-        echo [*] Создание .env из шаблона .env.example...
+        echo [*] Creating .env from template...
         copy .env.example .env >nul
     )
 )
 if not exist "config.json" (
     if exist "config.example.json" (
-        echo [*] Создание config.json из шаблона config.example.json...
+        echo [*] Creating config.json from template...
         copy config.example.json config.json >nul
     )
 )
 
-:: 6. Запуск проекта
+REM 6. Run Application
 echo =======================================================
-echo          Запуск AI-стримерши Velpur...
+echo          Starting AI Streamer Velpur...
 echo =======================================================
 echo.
 
@@ -101,12 +99,12 @@ if exist "main.py" (
 ) else if exist "run.py" (
     python run.py
 ) else (
-    echo [ERROR] Не найден исполняемый файл (main.py, app.py или run.py)!
+    echo [ERROR] Entry point (main.py, app.py, or run.py) not found!
 )
 
 if %errorlevel% neq 0 (
     echo.
-    echo [!] Программа завершилась с кодом ошибки: %errorlevel%
+    echo [!] Process exited with code: %errorlevel%
 )
 
 echo.
