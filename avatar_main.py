@@ -473,14 +473,21 @@ class LLMModule:
         if self._session and not self._session.closed:
             await self._session.close()
 
-    async def generate_response(self, user_input: str, conversation_history: List[Dict[str, str]]) -> str:
+    async def generate_response(self, user_input: str, conversation_history: List[Dict[str, str]], tools: Optional[List[Dict]] = None) -> tuple[str, Optional[List[Dict]]]:
         try:
             formatted_system_prompt = self.system_prompt_content.format(current_date=datetime.now().strftime("%Y-%m-%d %H:%M"))
             messages = [{"role": "system", "content": formatted_system_prompt}]
             messages.extend(conversation_history)
-            messages.append({"role": "user", "content": user_input})
+
+            # If user_input is empty, it means we are just passing back a tool response in conversation_history
+            if user_input:
+                messages.append({"role": "user", "content": user_input})
 
             payload = { "model": self.model_name, "messages": messages, "temperature": self.temperature, "max_tokens": self.max_tokens }
+
+            if tools:
+                payload["tools"] = tools
+
             headers = {"Content-Type": "application/json"}
 
             session = await self.get_session()
@@ -489,11 +496,18 @@ class LLMModule:
             async with session.post(self.api_url, json=payload, headers=headers, timeout=timeout) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                    message_data = data.get("choices", [{}])[0].get("message", {})
+
+                    content = message_data.get("content", "")
+                    if content:
+                        content = content.strip()
+
+                    tool_calls = message_data.get("tool_calls", None)
+                    return content, tool_calls
                 else:
                     error_text = await response.text()
                     logger.error(f"LLM API Error ({response.status}): {error_text}")
-                    return f"Аргх, не могу достучаться до своего процессора мыслей (API Error {response.status})."
+                    return f"Аргх, не могу достучаться до своего процессора мыслей (API Error {response.status}).", None
 
         except aiohttp.ClientConnectorError as e:
             logger.error(f"LLM Connection Error: {e}. LM Studio ({self.api_url}) запущен?")
@@ -974,6 +988,8 @@ class DiscordModule:
         Фоновая задача, которая проверяет, закончил ли пользователь говорить,
         и если да, отправляет собранное аудио на обработку.
         """
+        last_global_audio_time = time.time()
+
         while True:
             try:
                 # Пауза между проверками
@@ -982,6 +998,17 @@ class DiscordModule:
                 now = time.time()
                 # Копируем ключи, чтобы избежать ошибок изменения словаря во время итерации
                 users_to_process = list(user_last_audio_time.keys())
+
+                # Обновляем глобальное время последней активности, если кто-то говорит
+                if users_to_process:
+                    last_global_audio_time = now
+                elif now - last_global_audio_time > 300:  # 5 минут = 300 секунд
+                    logger.info("No audio detected for 5 minutes. Auto-disconnecting from voice channel.")
+                    if self.voice_client and self.voice_client.is_connected():
+                        self.voice_client.stop_listening()
+                        await self.voice_client.disconnect()
+                        self.voice_client = None
+                    break
 
                 for user_id in users_to_process:
                     last_audio_time = user_last_audio_time.get(user_id, 0)
@@ -1005,7 +1032,8 @@ class DiscordModule:
 
                         if user:
                             # Ставим голосовой запрос в очередь
-                            await self._orchestrator.queue_voice_request(
+                            await self._orchestrator.queue_request(
+                                request_type="voice",
                                 pcm_data=full_audio_data,
                                 user_id=str(user.id),
                                 username=user.name,
@@ -1137,6 +1165,7 @@ class AvatarOrchestrator:
         # --- Инициализация всех модулей ---
         self.memory = MemoryModule(config.memory_db_path)
         self.stt = STTModule(config.whisper_model, config.whisper_language)
+        self.vision = VisionModule()
         self.llm = LLMModule(
             api_url=config.llm_api_url, api_key=config.llm_api_key, model_name=config.llm_model_name_lmstudio,
             temperature=config.llm_temperature, max_tokens=config.llm_max_tokens_response
@@ -1346,10 +1375,99 @@ class AvatarOrchestrator:
         source = request['source']
 
         await self._set_thinking_state(True)
+
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "analyze_screen",
+                    "description": "Сделать скриншот экрана и получить текст с него. Используй, если пользователь просит посмотреть на экран или прочитать, что там написано.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "change_expression",
+                    "description": "Изменить выражение лица или использовать фишку (hotkey) в VTube Studio.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "emotion": {
+                                "type": "string",
+                                "description": "Название эмоции или фишки (например, 'quirk')."
+                            }
+                        },
+                        "required": ["emotion"]
+                    }
+                }
+            }
+        ]
+
         try:
             self.memory.add_user(user_id, username, request.get('display_name'))
             history = self.memory.get_user_context_for_api(user_id)
-            llm_response = await self.llm.generate_response(text, history)
+
+            # The LLMModule appends the text to the prompt, but not the history object
+            # We need to manually append it so we can re-send it with the tool response
+            if text:
+                history.append({"role": "user", "content": text})
+
+            # We now pass "" for the text because it is already in history
+            llm_response, tool_calls = await self.llm.generate_response("", history, tools=tools)
+
+            # Handle tool calls loop
+            max_iterations = 5
+            iterations = 0
+            while tool_calls and iterations < max_iterations:
+                iterations += 1
+                # Add tool call to history so model knows what it called
+                history.append({
+                    "role": "assistant",
+                    "content": llm_response if llm_response else "",
+                    "tool_calls": tool_calls
+                })
+
+                for tool_call in tool_calls:
+                    function_name = tool_call.get("function", {}).get("name")
+                    function_args_str = tool_call.get("function", {}).get("arguments", "{}")
+
+                    try:
+                        function_args = json.loads(function_args_str)
+                    except:
+                        function_args = {}
+
+                    logger.info(f"LLM requested tool call: {function_name} with args {function_args}")
+
+                    tool_result = ""
+                    if function_name == "analyze_screen":
+                        loop = asyncio.get_event_loop()
+                        tool_result = await loop.run_in_executor(None, self.vision.describe_screen)
+                    elif function_name == "change_expression":
+                        emotion = function_args.get("emotion")
+                        if emotion == "quirk" and self.config.vtube_hotkey_id_quirk:
+                            await self.vtube.trigger_hotkey(self.config.vtube_hotkey_id_quirk)
+                            tool_result = "Сделано!"
+                        else:
+                            tool_result = f"Эмоция {emotion} не найдена или не настроена."
+                    else:
+                        tool_result = "Неизвестная функция"
+
+                    # Add tool response to history
+                    history.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.get("id"),
+                        "name": function_name,
+                        "content": tool_result
+                    })
+
+                # Get the next response from LLM now that it has the tool results
+                llm_response, tool_calls = await self.llm.generate_response("", history, tools=tools)
+
         finally:
             await self._set_thinking_state(False)
 
@@ -1394,72 +1512,6 @@ class AvatarOrchestrator:
 
         if self.config.vtube_hotkey_id_thinking:
             await self.vtube.trigger_hotkey(self.config.vtube_hotkey_id_thinking)
-
-    ### ИЗМЕНЕНО: Общий обработчик текстового ввода ###
-    async def process_generic_text_input(self, text: str, user_id: str, username: str, reply_channel: Any):
-        # 1. Проверка кулдауна и занятости
-        now = time.time()
-        if (now - self.user_last_message_time.get(user_id, 0)) < self.config.user_cooldown_seconds:
-            logger.info(f"User {username} on cooldown.")
-            await reply_channel.send("У тебя кулдаун, подожди немного")
-            return # Молча игнорируем, чтобы не спамить
-
-        if self.is_busy_processing_llm:
-            await reply_channel.send("Я пока думаю над другим вопросом, погоди немного!")
-            return
-
-        self.is_busy_processing_llm = True
-
-        ### НОВОЕ: Включаем анимацию "Думает" ###
-        await self._set_thinking_animation(True)
-
-        try:
-            # 2. Получение ответа от LLM
-            self.memory.add_user(user_id, username, username)
-            conversation_history = self.memory.get_user_context_for_api(user_id)
-            llm_response_text = await self.llm.generate_response(text, conversation_history)
-
-        finally:
-            ### НОВОЕ: Выключаем анимацию "Думает" ###
-            await self._set_thinking_animation(False)
-            self.is_busy_processing_llm = False
-            self.user_last_message_time[user_id] = time.time()
-
-        if not llm_response_text:
-            llm_response_text = "Чёт я подвисла, не могу сформулировать мысль."
-
-        logger.info(f"LLM Response for {username}: {llm_response_text}")
-        self.memory.save_conversation(user_id, text, llm_response_text, str(reply_channel.id))
-
-        # 3. Отправка текстового ответа
-        await reply_channel.send(llm_response_text)
-
-        # 4. Синтез и воспроизведение аудио
-        if llm_response_text:
-            loop = asyncio.get_event_loop()
-
-            ### ИЗМЕНЕНО: TTS и воспроизведение вынесены в executor для неблокирующей работы ###
-            response_audio_data = await loop.run_in_executor(None, self.tts.synthesize, llm_response_text)
-
-            if response_audio_data:
-                logger.info(f"Synthesized audio for: {llm_response_text[:50]}...")
-
-                ### НОВОЕ: Включаем анимацию "Говорит" ###
-                await self._set_speaking_animation(True)
-
-                play_in_discord = self.discord.voice_client and self.discord.voice_client.is_connected()
-
-                if play_in_discord:
-                    await self.discord.play_audio_in_voice(response_audio_data)
-                else:
-                    await loop.run_in_executor(None, self.local_audio_player.play_audio_locally, response_audio_data)
-
-                ### НОВОЕ: Выключаем анимацию "Говорит" после воспроизведения ###
-                # Небольшая задержка, чтобы анимация не обрывалась резко
-                await asyncio.sleep(0.5)
-                await self._set_speaking_animation(False)
-            else:
-                logger.warning("TTS failed to synthesize audio.")
 
 # ===============================
 # MAIN APPLICATION & ENTRY POINT
@@ -1538,17 +1590,26 @@ class AvatarApplication:
                         logger.info("Recording from local microphone for 5 seconds...")
                         audio_bytes = self.orchestrator.local_audio_player.record_audio_from_mic(duration=5.0)
                         if audio_bytes:
-                            await self.orchestrator.process_local_mic_audio_input(audio_bytes)
+                            await self.orchestrator.queue_request(
+                                request_type="voice",
+                                wav_data=audio_bytes,
+                                user_id="local_cli_user",
+                                username="LocalCLI",
+                                display_name="Local CLI User",
+                                source="cli"
+                            )
                         else:
                             logger.warning("No audio recorded from microphone.")
                     elif user_input:
                         # Process as text input from a "local_user"
-                        await self.orchestrator.process_text_input(
+                        await self.orchestrator.queue_request(
+                            request_type="text",
                             text=user_input,
                             user_id="local_cli_user",
                             username="LocalCLI",
                             display_name="Local CLI User",
-                            channel=None # No Discord channel for CLI input
+                            source="cli",
+                            reply_context=None # No Discord channel for CLI input
                         )
                 except EOFError: # Happens if input stream closes (e.g. piped input)
                     logger.info("CLI input EOF reached.")
