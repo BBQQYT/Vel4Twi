@@ -93,7 +93,7 @@ flowchart LR
 ### 1. Клонирование репозитория
 
 ```bash
-git clone [https://github.com/BBQQYT/Vel4Twi.git](https://github.com/BBQQYT/Vel4Twi.git)
+git clone https://github.com/BBQQYT/Vel4Twi.git
 cd Vel4Twi
 
 ```
