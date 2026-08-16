@@ -35,6 +35,7 @@ import pytesseract
 import webrtcvad
 import librosa
 import aiohttp
+from aiohttp import web
 
 # ===============================
 # CONFIGURATION AND SETTINGS
@@ -99,6 +100,10 @@ class Config:
     twitch_nickname: str = "YOUR_TWITCH_BOT_NICKNAME"
     twitch_token: str = "oauth:YOUR_TWITCH_OAUTH_TOKEN"
     twitch_channel: str = "TARGET_TWITCH_CHANNEL_NAME"
+
+    ### YouTube ###
+    youtube_enabled: bool = False
+    youtube_video_id: str = "YOUR_YOUTUBE_LIVE_VIDEO_ID"
 
     ### Interaction settings ###
     user_cooldown_seconds: int = 60
@@ -414,6 +419,65 @@ class TwitchChatModule:
             await self.bot.send_twitch_message(self.target_channel, text)
         else:
             logger.warning("Twitch bot not running or channel not set, cannot send message.")
+
+# ===============================
+# YOUTUBE CHAT MODULE
+# ===============================
+
+class YouTubeModule:
+    def __init__(self, video_id: str, orchestrator_ref):
+        self.video_id = video_id
+        self._orchestrator_ref = orchestrator_ref
+        self._running = False
+        self._task: Optional[asyncio.Task] = None
+
+    async def start(self):
+        if not self.video_id or self.video_id == "YOUR_YOUTUBE_LIVE_VIDEO_ID":
+            logger.warning("YouTube video ID not configured. YouTube module will not start.")
+            return
+
+        try:
+            # We import pytchat locally so it's not a hard dependency if user doesn't need YT
+            import pytchat
+            self._chat = pytchat.create(video_id=self.video_id)
+            self._running = True
+            self._task = asyncio.create_task(self._listen_loop())
+            logger.info(f"YouTube module started listening to live chat for video: {self.video_id}")
+        except ImportError:
+            logger.error("pytchat module not installed. Run 'pip install pytchat' to use YouTube Live integration.")
+        except Exception as e:
+            logger.error(f"Failed to start YouTube module: {e}")
+
+    async def _listen_loop(self):
+        trigger_keyword = self._orchestrator_ref.config.bot_trigger_keyword.lower()
+        while self._running and self._chat.is_alive():
+            try:
+                for c in self._chat.get().sync_items():
+                    msg_text = c.message
+                    if trigger_keyword in msg_text.lower():
+                        text_to_process = re.sub(rf"(?i)\b{re.escape(trigger_keyword)}\b", "", msg_text).strip()
+                        if text_to_process:
+                            await self._orchestrator_ref.queue_request(
+                                request_type="text",
+                                user_id=c.author.channelId,
+                                username=c.author.name,
+                                display_name=c.author.name,
+                                source="youtube",
+                                text=text_to_process,
+                                reply_context=None
+                            )
+                await asyncio.sleep(1)
+            except Exception as e:
+                logger.error(f"Error in YouTube listen loop: {e}")
+                await asyncio.sleep(5)
+
+    async def stop(self):
+        self._running = False
+        if getattr(self, '_chat', None):
+            self._chat.terminate()
+        if self._task and not self._task.done():
+            self._task.cancel()
+        logger.info("YouTube module stopped.")
 
 # ===============================
 # STT MODULE (Speech-to-Text)
@@ -880,6 +944,20 @@ class VisionModule:
             return f"Screen text: {text[:500].strip()}..." if text else "Screen captured, no text detected or OCR failed."
         return "Unable to capture screen."
 
+    def get_screen_base64(self) -> Optional[str]:
+        image = self.capture_screen()
+        if not image:
+            return None
+
+        # Resize to save bandwidth/tokens
+        max_size = (1024, 1024)
+        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+        buffered = io.BytesIO()
+        image.save(buffered, format="JPEG", quality=85)
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        return f"data:image/jpeg;base64,{img_str}"
+
 # ===============================
 # DISCORD MODULE(text work, voice WIP)
 # ===============================
@@ -1183,6 +1261,13 @@ class AvatarOrchestrator:
                 channel=config.twitch_channel, orchestrator_ref=self
             )
 
+        self.youtube: Optional[YouTubeModule] = None
+        if config.youtube_enabled:
+            self.youtube = YouTubeModule(
+                video_id=config.youtube_video_id,
+                orchestrator_ref=self
+            )
+
         self.user_last_message_time: Dict[str, float] = {}
 
         self._is_thinking = False
@@ -1198,6 +1283,8 @@ class AvatarOrchestrator:
         await self.vtube.connect()
         if self.twitch:
             await self.twitch.start() # Убедитесь, что twitch.start() тоже не блокирующий! (судя по вашему коду, он не блокирующий, это хорошо)
+        if self.youtube:
+            await self.youtube.start()
 
         # --- Создаем и запускаем ВСЕ фоновые задачи ---
         tasks = []
@@ -1243,6 +1330,7 @@ class AvatarOrchestrator:
         if self.vtube.connected: await self.vtube.close()
         if self.llm: await self.llm.close_session()
         if self.twitch: await self.twitch.stop()
+        if self.youtube: await self.youtube.stop()
         logger.info("AI Avatar system stopped.")
 
     async def _idle_animation_loop(self):
@@ -1324,9 +1412,12 @@ class AvatarOrchestrator:
                             text_for_llm = self.stt.transcribe_audio(audio_for_stt)
                             logger.info(f"STT Result for {request['username']}: '{text_for_llm}'")
 
-                    if text_for_llm:
-                        await self.handle_interaction(text_for_llm, request)
-                        self.user_last_message_time[user_id] = time.time()
+                    if text_for_llm or request['request_type'] == 'voice': # ensure even empty strings from voice get handled if needed or logged, but we skip empty transcription above usually. If we want to guarantee handle_interaction for STT, we should just let it through if text_for_llm is truthy.
+                        if text_for_llm:
+                            await self.handle_interaction(text_for_llm, request)
+                            self.user_last_message_time[user_id] = time.time()
+                        else:
+                            logger.info("Skipping empty interaction (no text parsed)")
 
                 self.processing_queue.task_done()
             except asyncio.CancelledError:
@@ -1447,6 +1538,17 @@ class AvatarOrchestrator:
                     if function_name == "analyze_screen":
                         loop = asyncio.get_event_loop()
                         tool_result = await loop.run_in_executor(None, self.vision.describe_screen)
+
+                        # Note: We must still return the tool response strictly here to satisfy the API
+                        # Adding an intermediate user image message before resolving the tool will break the OpenAI standard
+
+                        base64_img = await loop.run_in_executor(None, self.vision.get_screen_base64)
+                        if base64_img:
+                            # Pass it as a string containing the image URL within the tool response.
+                            # Some models that support multimodal tool calls can accept this format,
+                            # or it gives the model the raw data to work with.
+                            tool_result += f"\n\n[IMAGE_DATA:{base64_img}]"
+
                     elif function_name == "change_expression":
                         emotion = function_args.get("emotion")
                         if emotion == "quirk" and self.config.vtube_hotkey_id_quirk:
@@ -1473,21 +1575,25 @@ class AvatarOrchestrator:
 
         if not llm_response:
             llm_response = "Чёт я подвисла, не могу сформулировать мысль."
-        logger.info(f"LLM Response for {username}: {llm_response}")
 
-        self.memory.save_conversation(user_id, text, llm_response, source)
+        # Strip thinking tags <think>...</think> for TTS and logging
+        cleaned_response = re.sub(r'<think>.*?</think>', '', llm_response, flags=re.DOTALL).strip()
+
+        logger.info(f"LLM Response for {username}: {cleaned_response}")
+
+        self.memory.save_conversation(user_id, text, cleaned_response, source)
 
         # --- Отправка ТЕКСТОВОГО ответа (если нужно) ---
         #if source == "discord_text":
-            #await request['reply_context'].send(llm_response)
+            #await request['reply_context'].send(cleaned_response)
         #elif source == "twitch":
-            #await self.twitch.send_message(llm_response)
+            #await self.twitch.send_message(cleaned_response)
         #elif source == "cli":
-            #print(f"Velpur > {llm_response}")
+            #print(f"Velpur > {cleaned_response}")
 
         # --- Синтез и ВОСПРОИЗВЕДЕНИЕ АУДИО ---
         loop = asyncio.get_event_loop()
-        audio_data = await loop.run_in_executor(None, self.tts.synthesize, llm_response)
+        audio_data = await loop.run_in_executor(None, self.tts.synthesize, cleaned_response)
 
         if audio_data:
             # Устанавливаем состояние "Говорит" в True.
@@ -1512,6 +1618,143 @@ class AvatarOrchestrator:
 
         if self.config.vtube_hotkey_id_thinking:
             await self.vtube.trigger_hotkey(self.config.vtube_hotkey_id_thinking)
+
+# ===============================
+# WEB UI MODULE (Settings)
+# ===============================
+
+class WebUIModule:
+    def __init__(self, application: 'AvatarApplication', port: int = 8080):
+        self.app_ref = application
+        self.port = port
+        self.app = web.Application()
+        self.app.add_routes([
+            web.get('/', self.handle_index),
+            web.post('/save', self.handle_save)
+        ])
+        self.runner = None
+
+    async def start(self):
+        self.runner = web.AppRunner(self.app)
+        await self.runner.setup()
+        site = web.TCPSite(self.runner, '127.0.0.1', self.port)
+        await site.start()
+        logger.info(f"Web UI for settings started at http://127.0.0.1:{self.port}")
+
+    async def stop(self):
+        if self.runner:
+            await self.runner.cleanup()
+            logger.info("Web UI stopped.")
+
+    async def handle_index(self, request):
+        config_dict = {}
+        for f_name in self.app_ref.config.__dataclass_fields__:
+            config_dict[f_name] = getattr(self.app_ref.config, f_name)
+
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Velpur AI Settings</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; background: #1e1e2e; color: #cdd6f4; margin: 0; padding: 20px; }}
+                h1 {{ color: #b4befe; text-align: center; }}
+                .container {{ max-width: 800px; margin: 0 auto; background: #181825; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }}
+                .form-group {{ margin-bottom: 15px; }}
+                label {{ display: block; margin-bottom: 5px; color: #a6adc8; }}
+                input[type="text"], input[type="number"] {{ width: 100%; padding: 8px; box-sizing: border-box; background: #313244; border: 1px solid #45475a; color: #cdd6f4; border-radius: 4px; }}
+                input[type="checkbox"] {{ transform: scale(1.2); }}
+                button {{ background: #89b4fa; color: #11111b; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; display: block; width: 100%; margin-top: 20px; font-weight: bold; }}
+                button:hover {{ background: #b4befe; }}
+                .success {{ color: #a6e3a1; text-align: center; margin-bottom: 15px; display: none; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>⚙️ Velpur AI Settings</h1>
+                <div id="success-msg" class="success">Настройки успешно сохранены (применены на лету)!</div>
+                <form id="settings-form">
+        """
+
+        for key, value in config_dict.items():
+            if type(value) == bool:
+                checked = "checked" if value else ""
+                html += f'<div class="form-group"><label><input type="checkbox" name="{key}" {checked}> {key}</label></div>'
+            elif type(value) in (int, float):
+                val_str = "" if value is None else str(value)
+                html += f'<div class="form-group"><label>{key}</label><input type="number" step="any" name="{key}" value="{val_str}"></div>'
+            else:
+                val_str = "" if value is None else str(value)
+                html += f'<div class="form-group"><label>{key}</label><input type="text" name="{key}" value="{val_str}"></div>'
+
+        html += """
+                <button type="submit">Сохранить настройки</button>
+                </form>
+            </div>
+            <script>
+                document.getElementById('settings-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const data = {};
+
+                    // Handle unchecked checkboxes
+                    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        data[cb.name] = cb.checked;
+                    });
+
+                    for (let [key, value] of formData.entries()) {
+                        if (e.target.elements[key].type !== 'checkbox') {
+                            data[key] = value;
+                        }
+                    }
+
+                    await fetch('/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    const msg = document.getElementById('success-msg');
+                    msg.style.display = 'block';
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                });
+            </script>
+        </body>
+        </html>
+        """
+        return web.Response(text=html, content_type='text/html')
+
+    async def handle_save(self, request):
+        try:
+            data = await request.json()
+
+            # Update config object directly (on-the-fly)
+            for key, value in data.items():
+                if hasattr(self.app_ref.config, key):
+                    current_type = type(getattr(self.app_ref.config, key))
+
+                    # Type casting
+                    try:
+                        if current_type == bool:
+                            setattr(self.app_ref.config, key, bool(value))
+                        elif current_type == int:
+                            setattr(self.app_ref.config, key, int(value) if value else None)
+                        elif current_type == float:
+                            setattr(self.app_ref.config, key, float(value) if value else None)
+                        else:
+                            # String or None
+                            setattr(self.app_ref.config, key, str(value) if value else None)
+                    except ValueError:
+                        logger.warning(f"Failed to cast setting {key} with value {value} to {current_type}")
+
+            # Save to config.json
+            self.app_ref.create_default_config_file()
+            logger.info("Configuration updated from Web UI and saved to file.")
+
+            return web.json_response({"status": "success"})
+        except Exception as e:
+            logger.error(f"Error saving config via Web UI: {e}")
+            return web.json_response({"status": "error", "message": str(e)}, status=500)
 
 # ===============================
 # MAIN APPLICATION & ENTRY POINT
@@ -1573,6 +1816,7 @@ class AvatarApplication:
 
 
         self.orchestrator = AvatarOrchestrator(self.config)
+        self.web_ui = WebUIModule(self)
 
         # Add a simple command-line interface for local testing
         async def cli_input_loop():
@@ -1626,6 +1870,9 @@ class AvatarApplication:
         cli_task = None
         orchestrator_task = None
         try:
+            # Start the Web UI
+            await self.web_ui.start()
+
             # Start the orchestrator (which includes the Discord bot)
             # The orchestrator's start method is now blocking because of bot.start()
             orchestrator_task = asyncio.create_task(self.orchestrator.start())
@@ -1649,6 +1896,8 @@ class AvatarApplication:
             if self.orchestrator and self.orchestrator.running: # If not already stopped
                 logger.info("Ensuring orchestrator shutdown in finally block.")
                 await self.orchestrator.stop()
+            if self.web_ui:
+                await self.web_ui.stop()
             if cli_task and not cli_task.done():
                 cli_task.cancel()
             logger.info("Application shutdown complete.")
