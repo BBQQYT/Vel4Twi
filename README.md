@@ -1,17 +1,16 @@
 <div align="center">
   
-  <!-- Анимированный заголовок -->
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12&height=200&section=header&text=Vel4Twi%20🎆&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=35" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=9B72C7,60BA70&height=200&section=header&text=Vel4Twi%20%E2%9C%A7&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=35" />
   
-  <h1>🎥 Локальный AI-стример Velpur</h1>
+  <h1> ✧ Локальный AI-стример Velpur ✧ </h1>
   
-  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=22&duration=3000&pause=1000&color=6366F1&center=true&vCenter=true&multiline=true&width=600&height=80&lines=🤖+Полнофункциональная+AI-стримерша;🎨+VTube+Studio+%7C+Discord+%7C+Twitch;🧠+Локальные+LLM+%7C+Whisper+%7C+Coqui+TTS" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=22&duration=3000&pause=1000&color=9B72C7&center=true&vCenter=true&multiline=true&width=600&height=80&lines=%E2%9C%A7+Полнофункциональная+AI-стримерша;%E2%9C%A7+VTube+Studio+%7C+Discord+%7C+Twitch;%E2%9C%A7+Локальные+LLM+%7C+Whisper+%7C+Coqui+TTS" alt="Typing SVG" />
   
   <p>
-    <img src="https://img.shields.io/github/stars/BBQQYT/Vel4Twi?style=for-the-badge&logo=github&logoColor=white&color=ff6b6b" alt="Stars" />
-    <img src="https://img.shields.io/github/forks/BBQQYT/Vel4Twi?style=for-the-badge&logo=github&logoColor=white&color=6366f1" alt="Forks" />
-    <img src="https://img.shields.io/github/license/BBQQYT/Vel4Twi?style=for-the-badge&color=10b981" alt="License" />
-    <img src="https://img.shields.io/github/last-commit/BBQQYT/Vel4Twi?style=for-the-badge&color=f59e0b" alt="Last Commit" />
+    <img src="https://img.shields.io/github/stars/BBQQYT/Vel4Twi?style=for-the-badge&logo=github&logoColor=white&color=9B72C7" alt="Stars" />
+    <img src="https://img.shields.io/github/forks/BBQQYT/Vel4Twi?style=for-the-badge&logo=github&logoColor=white&color=60BA70" alt="Forks" />
+    <img src="https://img.shields.io/github/license/BBQQYT/Vel4Twi?style=for-the-badge&color=9B72C7" alt="License" />
+    <img src="https://img.shields.io/github/last-commit/BBQQYT/Vel4Twi?style=for-the-badge&color=60BA70" alt="Last Commit" />
   </p>
   
 </div>
@@ -22,32 +21,32 @@
 
 ---
 
-## 🎯 О проекте
+## ⋆ ˚｡⋆ О проекте ⋆ ˚｡⋆
 
-**Vel4Twi** — это революционный проект с открытым исходным кодом, позволяющий запустить полнофункциональную AI-стримершу по имени **Velpur** прямо на вашем компьютере. 
+**Vel4Twi** — это нежный и ламповый проект с открытым исходным кодом, который поможет вам запустить полнофункциональную AI-стримершу по имени **Velpur** прямо на вашем компьютере.
 
-🚀 **Velpur** — это не просто чат-бот. Это виртуальная личность с собственным характером, памятью и способностью взаимодействовать со зрителями.
+✧ **Velpur** — это не просто чат-бот. Это виртуальная личность со своим характером, уютной памятью и возможностью тепло общаться со зрителями.
 
 ---
 
-## ✨ Ключевые возможности
+## ❀ Ключевые возможности ❀
 
 <table>
   <tr>
     <td width="33%" align="center">
-      <h3>🤖 Продвинутый AI</h3>
+      <h3>✦ Продвинутый AI</h3>
       <p>Локальная LLM через LM Studio</p>
-      <p>Характер Velpur через детальный промпт</p>
+      <p>Мягкий характер Velpur через промпт</p>
     </td>
     <td width="33%" align="center">
-      <h3>🗣️ Обработка речи</h3>
+      <h3>✦ Обработка речи</h3>
       <p>STT: Whisper для распознавания</p>
       <p>TTS: Coqui TTS + XTTS v2</p>
     </td>
     <td width="33%" align="center">
-      <h3>🎭 VTube Studio</h3>
+      <h3>✦ VTube Studio</h3>
       <p>Автоматические анимации</p>
-      <p>Lip Sync и Idle-анимации</p>
+      <p>Lip Sync и Idle-поведения</p>
     </td>
   </tr>
 </table>
@@ -55,54 +54,48 @@
 <table>
   <tr>
     <td width="50%" align="center">
-      <h3>💬 Мультиплатформенность</h3>
-      <p>• Discord (текст + голос)</p>
-      <p>• Twitch Chat</p>
-      <p>• Командная строка</p>
+      <h3>♡ Мультиплатформенность</h3>
+      <p>⋆ Discord (текст + голос)</p>
+      <p>⋆ Twitch Chat</p>
+      <p>⋆ YouTube Live Chat</p>
+      <p>⋆ Командная строка</p>
     </td>
     <td width="50%" align="center">
-      <h3>🧠 Долгосрочная память</h3>
-      <p>• SQLite база данных</p>
-      <p>• Автоизвлечение фактов</p>
-      <p>• История диалогов</p>
+      <h3>♡ Долгосрочная память</h3>
+      <p>⋆ SQLite база данных</p>
+      <p>⋆ Автоизвлечение фактов</p>
+      <p>⋆ История диалогов</p>
     </td>
   </tr>
 </table>
 
 ---
 
-## 🔧 Технологический стек
+## ✿ Технологический стек ✿
 
 <div align="center">
   
   <table>
     <tr>
       <td align="center" width="20%">
-        <h4>🚀 Основа</h4>
-        <img src="https://skillicons.dev/icons?i=python,pytorch&theme=dark" /><br/>
+        <h4>✧ Основа</h4>
         <strong>Python + PyTorch</strong>
       </td>
       <td align="center" width="20%">
-        <h4>🤖 AI/ML</h4>
-        <img src="https://img.shields.io/badge/Whisper-25D366?style=for-the-badge&logo=openai&logoColor=white" /><br/>
-        <img src="https://img.shields.io/badge/LM_Studio-000000?style=for-the-badge&logo=microsoft&logoColor=white" /><br/>
-        <img src="https://img.shields.io/badge/Coqui_TTS-FF6B35?style=for-the-badge&logo=python&logoColor=white" />
+        <h4>✧ AI/ML</h4>
+        <strong>Whisper, LM Studio, Coqui TTS</strong>
       </td>
       <td align="center" width="20%">
-        <h4>🎮 Интеграции</h4>
-        <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" /><br/>
-        <img src="https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white" /><br/>
-        <img src="https://img.shields.io/badge/VTube_Studio-FF69B4?style=for-the-badge&logo=youtube&logoColor=white" />
+        <h4>✧ Интеграции</h4>
+        <strong>Discord, Twitch, YouTube, VTube Studio</strong>
       </td>
       <td align="center" width="20%">
-        <h4>💾 Данные</h4>
-        <img src="https://skillicons.dev/icons?i=sqlite&theme=dark" /><br/>
+        <h4>✧ Данные</h4>
         <strong>SQLite + JSON</strong>
       </td>
       <td align="center" width="20%">
-        <h4>🔊 Аудио</h4>
-        <img src="https://img.shields.io/badge/FFmpeg-007808?style=for-the-badge&logo=ffmpeg&logoColor=white" /><br/>
-        <strong>VB-CABLE</strong>
+        <h4>✧ Аудио</h4>
+        <strong>FFmpeg, VB-CABLE</strong>
       </td>
     </tr>
   </table>
@@ -111,87 +104,87 @@
 
 ---
 
-## 🛠️ Архитектура
+## ୨୧ Принцип работы ୨୧
 
 ```mermaid
 graph TB
-    A[💬 Discord/Twitch Input] --> B[🧠 Orchestrator]
-    C[🎤 Voice Input] --> D[🗣️ STT Module]
+    A[ Ввод: Discord / Twitch / YouTube ] --> B[ Оркестратор ]
+    C[ Голосовой ввод ] --> D[ STT Модуль ]
     D --> B
-    B --> E[💾 Memory Module]
-    E --> F[🤖 LLM Module]
-    F --> G[🔊 TTS Module]
-    G --> H[🎭 VTube Studio]
-    G --> I[🔈 Audio Output]
+    B --> E[ Модуль памяти ]
+    E --> F[ LLM Модуль ]
+    F --> G[ TTS Модуль ]
+    G --> H[ VTube Studio ]
+    G --> I[ Аудио Выход ]
     B --> H
 ```
 
-### 📋 Принцип работы
-
-1. **📲 Ввод:** Получение сообщений из Discord, Twitch или голосовых сообщений
-2. **🔍 Обработка:** Whisper преобразует голос в текст
-3. **🧠 Мышление:** Локальная LLM генерирует ответ с учетом контекста
-4. **🗣️ Ответ:** Coqui TTS синтезирует голос Velpur
-5. **🎭 Анимация:** VTube Studio оживляет аватар
+⋆ **Получение:** Входящие сообщения из чатов или голосовые сообщения бережно собираются в очередь.
+⋆ **Обработка:** Whisper внимательно слушает и преобразует голос в текст.
+⋆ **Мышление:** Локальная LLM придумывает ответ с учетом прошлых бесед и очищается от тегов размышлений.
+⋆ **Ответ:** Coqui TTS синтезирует мягкий голос Velpur.
+⋆ **Анимация:** VTube Studio добавляет жизнь и эмоции аватару.
 
 ---
 
-## 🚀 Быстрый старт
+## ⋆ Быстрый старт ⋆
 
-### ⚙️ Требования
+### ❀ Требования
 
-- 🐍 **Python 3.9+**
-- 🔥 **PyTorch** (с поддержкой CUDA для GPU)
-- 🎨 **LM Studio**
-- 🎭 **VTube Studio** 
-- 🔊 **Виртуальный аудиокабель** (VB-CABLE)
+- ⋆ **Python 3.9+**
+- ⋆ **PyTorch** (с поддержкой CUDA для GPU)
+- ⋆ **LM Studio**
+- ⋆ **VTube Studio**
+- ⋆ **Виртуальный аудиокабель** (VB-CABLE)
 
-### 💻 Установка
+### ❀ Установка
 
 ```bash
 # Клонирование репозитория
 git clone https://github.com/BBQQYT/Vel4Twi.git
 cd Vel4Twi
 
-# Установка зависимостей
-pip install -r requirements.txt
-
-# Установка FFmpeg (необходим для аудио)
-# Windows: скачать с официального сайта
+# Установка FFmpeg (необходим для работы со звуком)
+# Windows: скачать с официального сайта и добавить в PATH
 # Linux: sudo apt install ffmpeg
 ```
 
-### ⚙️ Настройка
+### ❀ Настройка
 
 <details>
-<summary>🔧 <strong>Подробная настройка</strong></summary>
+<summary>✧ <strong>Подробная настройка</strong></summary>
 
-#### 1. **LM Studio**
-- Скачайте и запустите LM Studio
-- Загрузите совместимую модель (Mistral, Llama и т.д.)
-- Запустите Local Server
+⋆ **1. LM Studio**
+- Скачайте и запустите LM Studio.
+- Загрузите подходящую модель.
+- Запустите локальный сервер.
 
-#### 2. **VTube Studio** 
-- Запустите VTube Studio и загрузите аватар
-- Включите API (Start API)
-- Создайте хоткеи для анимаций
+⋆ **2. VTube Studio**
+- Запустите VTube Studio и загрузите свой аватар.
+- Включите API (Start API) и разрешите подключение.
+- Настройте горячие клавиши для эмоций.
 
-#### 3. **config.json**
-При первом запуске файл создастся автоматически. Отредактируйте:
-- `discord_token`: Токен вашего Discord-бота
-- `twitch_token`, `twitch_nickname`, `twitch_channel`: Данные Twitch
-- `llm_model_name_lmstudio`: Имя модели из LM Studio
-- `speaker_wav_path_tts`: Путь к .wav файлу для клонирования голоса
+⋆ **3. Конфигурация**
+- При запуске через веб-интерфейс или скрипт создастся нужная конфигурация.
+- Вы можете настроить токены Discord, Twitch и другие параметры в удобном Web UI.
 
 </details>
 
-### 🚀 Запуск
+### ❀ Запуск
 
-```bash
-python main.py
+Теперь для удобства добавлены скрипты автозапуска! Они сами проверят окружение, установят зависимости и запустят проект.
+
+**Для Windows:**
+```cmd
+start.bat
 ```
 
-При первом запуске VTube Studio запросит разрешение на подключение. Разрешите его!
+**Для Linux / macOS:**
+```bash
+bash start.sh
+```
+
+При первом запуске VTube Studio мягко попросит разрешение на подключение — обязательно разрешите его.
 
 ---
 
@@ -218,57 +211,36 @@ python main.py
 
 ---
 
-## 🤝 Вклад в развитие
+## ♡ Вклад в развитие ♡
 
-Мы приветствуем любой вклад! 🎉
+Будем очень рады любой вашей помощи и пулл-реквестам!
 
-1. **Fork** репозитория
-2. **Создайте** feature ветку
-3. **Отправьте** Pull Request
-
-### Идеи для вклада:
-- 🔧 Оптимизация производительности
-- 🌍 Новые платформы интеграции
-- 🎨 Улучшение анимаций
-- 📝 Документация и переводы
+1. **Форкните** репозиторий ⋆
+2. **Создайте** новую ветку ⋆
+3. **Отправьте** Pull Request ⋆
 
 ---
 
-## 📜 Лицензия
+## ✧ Лицензия ✧
 
-Этот проект распространяется под лицензией **GPL-3.0**. Подробности см. в файле [LICENSE](LICENSE).
-
----
-
-## 🙏 Благодарности
-
-Спасибо командам за создание невероятных технологий:
-- **OpenAI** за Whisper
-- **Coqui** за открытое TTS-решение
-- **LM Studio** за удобный интерфейс для локальных LLM
-- **VTube Studio** за поддержку API
-- **Vedal** за Neuro-sama и вдохновение
+Проект распространяется под лицензией **GPL-3.0**. Все подробности можно найти в файле [LICENSE](LICENSE).
 
 ---
 
 <div align="center">
   
-  <h2>💖 Поддержать проект</h2>
+  <h2>♡ Поддержать проект ♡</h2>
   
-  <p>Если Vel4Twi помог вам создать что-то удивительное:</p>
+  <p>Если Velpur принесла немного уюта и радости в ваш день:</p>
   
   <a href="#">
-    <img src="https://img.shields.io/badge/%E2%AD%90_%D0%9F%D0%BE%D1%81%D1%82%D0%B0%D0%B2%D1%8C%D1%82%D0%B5_%D0%B7%D0%B2%D0%B5%D0%B7%D0%B4%D1%83-FFD700?style=for-the-badge&logo=github&logoColor=black" alt="Star" />
+    <img src="https://img.shields.io/badge/✧_Поставить_звезду-9B72C7?style=for-the-badge&logo=github&logoColor=white" alt="Star" />
   </a>
   <a href="#">
-    <img src="https://img.shields.io/badge/%F0%9F%94%84_Fork_%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82-6366F1?style=for-the-badge&logo=github&logoColor=white" alt="Fork" />
-  </a>
-  <a href="#">
-    <img src="https://img.shields.io/badge/%F0%9F%92%AC_%D0%A1%D0%BE%D0%BE%D0%B1%D1%89%D0%B8%D1%82%D1%8C_%D0%BE_%D0%B1%D0%B0%D0%B3%D0%B5-FF6B6B?style=for-the-badge&logo=github&logoColor=white" alt="Report Bug" />
+    <img src="https://img.shields.io/badge/✧_Форк_проекта-60BA70?style=for-the-badge&logo=github&logoColor=white" alt="Fork" />
   </a>
   
-  <!-- Волна внизу -->
   <br/><br/>
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12&height=120&section=footer" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=9B72C7,60BA70&height=120&section=footer" />
   
 </div>
