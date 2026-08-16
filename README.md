@@ -4,7 +4,7 @@
   
   <h1> ✧ Локальный AI-стример Velpur ✧ </h1>
   
-  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=22&duration=3000&pause=1000&color=9B72C7&center=true&vCenter=true&multiline=true&width=600&height=80&lines=%E2%9C%A7+Полнофункциональная+AI-стримерша;%E2%9C%A7+VTube+Studio+%7C+Discord+%7C+Twitch;%E2%9C%A7+Локальные+LLM+%7C+Whisper+%7C+Coqui+TTS" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=22&duration=3000&pause=1000&color=9B72C7&center=true&vCenter=true&multiline=true&width=600&height=80&lines=%E2%9C%A7+%D0%9F%D0%BE%D0%BB%D0%BD%D0%BE%D1%84%D1%83%D0%BD%D0%BA%D1%86%D0%B8%D0%BE%D0%BD%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F+AI-%D1%81%D1%82%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%88%D0%B0;%E2%9C%A7+VTube+Studio+%7C+Discord+%7C+Twitch;%E2%9C%A7+%D0%9B%D0%BE%D0%BA%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5+LLM+%7C+Whisper+%7C+Coqui+TTS" alt="Typing SVG" />
   
   <p>
     <img src="https://img.shields.io/github/stars/BBQQYT/Vel4Twi?style=for-the-badge&logo=github&logoColor=white&color=9B72C7" alt="Stars" />
